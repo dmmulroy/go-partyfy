@@ -12,6 +12,9 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"os"
+
+	"github.com/ericpauley/go-quantize/quantize"
 )
 
 const (
@@ -59,14 +62,28 @@ func partyfy(r io.Reader) error {
 		return err
 	}
 
-	// quant := quantize.MedianCutQuantizer{}
-	// palette := quant.Quantize(make([]color.Color, 0, 256), img)
+	quant := quantize.MedianCutQuantizer{}
+	palette := quant.Quantize(make([]color.Color, 0, 256), img)
 
-	// frames := make([]image.Paletted, len(colors))
+	frames := make([]*image.Paletted, len(colors))
+
+	for idx := range frames {
+		frames[idx] = &image.Paletted{
+			Palette: palette,
+			Rect:    img.Bounds(),
+			Pix:     make([]uint8, len(pixels)),
+		}
+	}
+
 	for idx := 0; idx < len(pixels); idx += 4 {
 		pixel := color.NRGBA{pixels[idx], pixels[idx+1], pixels[idx+2], pixels[idx+3]}
 
-		gp := grayscale(pixel)
+		gp := mix(grayscale(pixel), colors[0], 60)
+
+		if gp.R != 0x0 {
+			fmt.Printf("%#v\n", gp)
+
+		}
 
 		pixels[idx] = gp.R
 		pixels[idx+1] = gp.G
@@ -74,25 +91,22 @@ func partyfy(r io.Reader) error {
 		pixels[idx+3] = gp.A
 	}
 
-	fmt.Println(pixels)
-
 	x := image.NewNRGBA(img.Bounds())
 	x.Pix = pixels
 
-	// f, err := os.Create("test.gif")
+	f, err := os.Create("test.gif")
 
-	// if err != nil {
-	// 	return err
-	// }
+	if err != nil {
+		return err
+	}
 
-	// defer f.Close()
+	defer f.Close()
 
-	// err = gif.Encode(f, x, &gif.Options{Quantizer: quantize.MedianCutQuantizer{}})
+	err = gif.Encode(f, x, &gif.Options{Quantizer: quantize.MedianCutQuantizer{}})
 
-	// if err != nil {
-	// 	return err
-	// }
-
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -135,4 +149,13 @@ func grayscale(pixel color.NRGBA) color.NRGBA {
 	gray := uint8(math.Round((0.21*float64(pixel.R) + 0.72*float64(pixel.G) + 0.07*float64(pixel.B))))
 
 	return color.NRGBA{gray, gray, gray, pixel.A}
+}
+
+func mix(a color.NRGBA, b color.NRGBA, opacity uint8) color.NRGBA {
+	return color.NRGBA{
+		uint8(float64(float64(b.R)-float64(a.R))*(float64(opacity)/100) + float64(a.R)),
+		uint8(float64(float64(b.G)-float64(a.G))*(float64(opacity)/100) + float64(a.G)),
+		uint8(float64(float64(b.B)-float64(a.B))*(float64(opacity)/100) + float64(a.B)),
+		a.A,
+	}
 }
