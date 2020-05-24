@@ -20,6 +20,19 @@ const (
 	GIF  = "image/gif"
 )
 
+var colors = []color.NRGBA{
+	{255, 141, 139, 255},
+	{254, 214, 137, 255},
+	{136, 255, 137, 255},
+	{135, 255, 255, 255},
+	{139, 181, 254, 255},
+	{215, 140, 255, 255},
+	{255, 140, 255, 255},
+	{255, 104, 247, 255},
+	{254, 108, 183, 255},
+	{255, 105, 104, 255},
+}
+
 func partyfy(r io.Reader) error {
 	buf := bytes.Buffer{}
 
@@ -33,18 +46,36 @@ func partyfy(r io.Reader) error {
 		return err
 	}
 
-	img, err := getNRGBAImage(&buf, mimetype)
+	img, err := getImage(&buf, mimetype)
 
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(img)
+	pixels, err := getPixels(img)
+
+	if err != nil {
+		return err
+	}
+
+	for idx := 0; idx < len(pixels); idx += 4 {
+		pixel := color.RGBA{pixels[idx], pixels[idx+1], pixels[idx+2], pixels[idx+3]}
+
+		fmt.Println(pixel)
+	}
+
+	// quant := quantize.MedianCutQuantizer{}
+
+	// palette := quant.Quantize(make([]color.Color, 0, 256), img)
+
+	// frames := make([]image.Paletted, len(colors))
+
+	// fmt.Println(NRGBAimg.Pix)
 
 	return nil
 }
 
-func getNRGBAImage(buf *bytes.Buffer, mimetype string) (*image.NRGBA, error) {
+func getImage(buf *bytes.Buffer, mimetype string) (image.Image, error) {
 	var img image.Image
 	var err error
 
@@ -60,31 +91,21 @@ func getNRGBAImage(buf *bytes.Buffer, mimetype string) (*image.NRGBA, error) {
 		err = errors.New("unsupportd mimetype")
 	}
 
-	imgNRGBA, ok := img.(*image.NRGBA)
+	return img, err
+}
+
+func getPixels(i image.Image) ([]uint8, error) {
+	img, ok := i.(*image.NRGBA)
 
 	if !ok {
-		err = errors.New("error converting to NRGBA image")
+		return nil, errors.New("error getting pixels")
 	}
 
-	return imgNRGBA, err
+	return img.Pix, nil
 }
 
 func getFileContentType(buf []byte) (string, error) {
 	contentType := http.DetectContentType(buf)
 
 	return contentType, nil
-}
-
-func getPartyColors() []color.NRGBA {
-	return []color.NRGBA{
-		{255, 141, 139, 255},
-		{254, 214, 137, 255},
-		{136, 255, 137, 255},
-		{135, 255, 255, 255},
-		{139, 181, 254, 255},
-		{215, 140, 255, 255},
-		{255, 140, 255, 255},
-		{255, 104, 247, 255},
-		{254, 108, 183, 255},
-		{255, 105, 104, 255}}
 }
