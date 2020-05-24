@@ -153,9 +153,9 @@ func grayscale(pixel color.NRGBA) color.NRGBA {
 
 func mix(a color.NRGBA, b color.NRGBA, opacity uint8) color.NRGBA {
 	return color.NRGBA{
-		uint8(float64(float64(b.R)-float64(a.R))*(float64(opacity)/100) + float64(a.R)),
-		uint8(float64(float64(b.G)-float64(a.G))*(float64(opacity)/100) + float64(a.G)),
-		uint8(float64(float64(b.B)-float64(a.B))*(float64(opacity)/100) + float64(a.B)),
+		uint8((float64(b.R)-float64(a.R))*(float64(opacity)/100) + float64(a.R)),
+		uint8((float64(b.G)-float64(a.G))*(float64(opacity)/100) + float64(a.G)),
+		uint8((float64(b.B)-float64(a.B))*(float64(opacity)/100) + float64(a.B)),
 		a.A,
 	}
 }
