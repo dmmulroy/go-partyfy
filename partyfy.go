@@ -10,6 +10,7 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
+	"math"
 	"net/http"
 )
 
@@ -58,19 +59,39 @@ func partyfy(r io.Reader) error {
 		return err
 	}
 
-	for idx := 0; idx < len(pixels); idx += 4 {
-		pixel := color.RGBA{pixels[idx], pixels[idx+1], pixels[idx+2], pixels[idx+3]}
-
-		fmt.Println(pixel)
-	}
-
 	// quant := quantize.MedianCutQuantizer{}
-
 	// palette := quant.Quantize(make([]color.Color, 0, 256), img)
 
 	// frames := make([]image.Paletted, len(colors))
+	for idx := 0; idx < len(pixels); idx += 4 {
+		pixel := color.NRGBA{pixels[idx], pixels[idx+1], pixels[idx+2], pixels[idx+3]}
 
-	// fmt.Println(NRGBAimg.Pix)
+		gp := grayscale(pixel)
+
+		pixels[idx] = gp.R
+		pixels[idx+1] = gp.G
+		pixels[idx+2] = gp.B
+		pixels[idx+3] = gp.A
+	}
+
+	fmt.Println(pixels)
+
+	x := image.NewNRGBA(img.Bounds())
+	x.Pix = pixels
+
+	// f, err := os.Create("test.gif")
+
+	// if err != nil {
+	// 	return err
+	// }
+
+	// defer f.Close()
+
+	// err = gif.Encode(f, x, &gif.Options{Quantizer: quantize.MedianCutQuantizer{}})
+
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -108,4 +129,10 @@ func getFileContentType(buf []byte) (string, error) {
 	contentType := http.DetectContentType(buf)
 
 	return contentType, nil
+}
+
+func grayscale(pixel color.NRGBA) color.NRGBA {
+	gray := uint8(math.Round((0.21*float64(pixel.R) + 0.72*float64(pixel.G) + 0.07*float64(pixel.B))))
+
+	return color.NRGBA{gray, gray, gray, pixel.A}
 }
