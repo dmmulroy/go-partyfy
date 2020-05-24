@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"image/color"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
@@ -39,6 +40,7 @@ func partyfy(r io.Reader) error {
 	}
 
 	fmt.Println(img)
+
 	return nil
 }
 
@@ -71,4 +73,18 @@ func getFileContentType(buf []byte) (string, error) {
 	contentType := http.DetectContentType(buf)
 
 	return contentType, nil
+}
+
+func getPartyColors() []color.NRGBA {
+	return []color.NRGBA{
+		{255, 141, 139, 255},
+		{254, 214, 137, 255},
+		{136, 255, 137, 255},
+		{135, 255, 255, 255},
+		{139, 181, 254, 255},
+		{215, 140, 255, 255},
+		{255, 140, 255, 255},
+		{255, 104, 247, 255},
+		{254, 108, 183, 255},
+		{255, 105, 104, 255}}
 }
